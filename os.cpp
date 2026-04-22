@@ -1,10 +1,3 @@
-/*
- * ============================================================
- *  Virtual Basic Operating System Simulator - Phase 1 (C++ Version)
- *  Multiprogramming Operating System (MOS)
- * ============================================================
- */
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -16,21 +9,14 @@ using namespace std;
 
 class VirtualOS {
 private:
-    // CPU Registers
-    char R[4];          // General Purpose Register (4 bytes)
-    char IR[4];         // Instruction Register (4 bytes)
-    int IC;             // Instruction Counter (2-digit, 00-99)
-    int C;              // Comparison flag (0 or 1)
-    int SI;             // Service Interrupt (1=Read, 2=Write, 3=Halt)
-
-    // Memory: 100 words, each 4 bytes
+    char R[4];
+    char IR[4];
+    int IC;
+    int C;
+    int SI;
     char M[100][4];
-
-    // Files
     ifstream fin;
     ofstream fout;
-
-    // Buffer for reading input
     string buffer;
 
 public:
@@ -39,12 +25,10 @@ public:
     }
 
     void init() {
-        // Clear memory - fill with spaces
         for (int i = 0; i < 100; i++)
             for (int j = 0; j < 4; j++)
                 M[i][j] = ' ';
 
-        // Clear CPU registers
         for (int i = 0; i < 4; i++) {
             R[i] = ' ';
             IR[i] = ' ';
@@ -76,7 +60,6 @@ public:
                 cout << "\n";
             }
         }
-
         cout << "=================================\n\n";
     }
 
@@ -99,9 +82,8 @@ public:
         cout << "   Multiprogramming Operating System (MOS)\n";
         cout << "==============================================\n\n";
 
-        int m = 0; // Memory pointer
+        int m = 0;
         while (getline(fin, buffer)) {
-            // Remove trailing \r if present (Windows compatibility)
             if (!buffer.empty() && buffer.back() == '\r') {
                 buffer.pop_back();
             }
@@ -125,7 +107,6 @@ public:
                 cout << "----------------------------------------------\n\n";
             } 
             else {
-                // Program/Data Card
                 int len = buffer.length();
                 for (int i = 0; i < len; i++) {
                     M[m][i % 4] = buffer[i];
@@ -137,59 +118,57 @@ public:
 
         fin.close();
         fout.close();
-        std::cout << "[DONE] All jobs processed. Check " << outputFilename << " for results.\n";
+        cout << "[DONE] All jobs processed. Check " << outputFilename << " for results.\n";
     }
 
     void executeUserProgram() {
-        IC = 0; // Start from addr 0
+        IC = 0;
         while (true) {
-            // FETCH
             for (int i = 0; i < 4; i++)
                 IR[i] = M[IC][i];
             
             int currentIC = IC;
             IC++;
 
-            // DECODE & EXECUTE
             int address = (IR[2] - '0') * 10 + (IR[3] - '0');
 
             if (IR[0] == 'G' && IR[1] == 'D') {
                 cout << "  [CPU] IC=" << setw(2) << setfill('0') << currentIC 
-                          << " | Instruction: GD" << setw(2) << address 
-                          << " (Get Data -> M[" << setw(2) << address << "])\n";
+                     << " | Instruction: GD" << setw(2) << address 
+                     << " (Get Data -> M[" << setw(2) << address << "])\n";
                 SI = 1;
                 MOS();
             } 
             else if (IR[0] == 'P' && IR[1] == 'D') {
                 cout << "  [CPU] IC=" << setw(2) << setfill('0') << currentIC 
-                          << " | Instruction: PD" << setw(2) << address 
-                          << " (Put Data <- M[" << setw(2) << address << "])\n";
+                     << " | Instruction: PD" << setw(2) << address 
+                     << " (Put Data <- M[" << setw(2) << address << "])\n";
                 SI = 2;
                 MOS();
             } 
             else if (IR[0] == 'H') {
                 cout << "  [CPU] IC=" << setw(2) << setfill('0') << currentIC 
-                          << " | Instruction: H    (Halt)\n";
+                     << " | Instruction: H    (Halt)\n";
                 SI = 3;
                 MOS();
                 break;
             } 
             else if (IR[0] == 'L' && IR[1] == 'R') {
                 cout << "  [CPU] IC=" << setw(2) << setfill('0') << currentIC 
-                          << " | Instruction: LR" << setw(2) << address 
-                          << " (Load R <- M[" << setw(2) << address << "])\n";
+                     << " | Instruction: LR" << setw(2) << address 
+                     << " (Load R <- M[" << setw(2) << address << "])\n";
                 for (int i = 0; i < 4; i++) R[i] = M[address][i];
             } 
             else if (IR[0] == 'S' && IR[1] == 'R') {
                 cout << "  [CPU] IC=" << setw(2) << setfill('0') << currentIC 
-                          << " | Instruction: SR" << setw(2) << address 
-                          << " (Store R -> M[" << setw(2) << address << "])\n";
+                     << " | Instruction: SR" << setw(2) << address 
+                     << " (Store R -> M[" << setw(2) << address << "])\n";
                 for (int i = 0; i < 4; i++) M[address][i] = R[i];
             } 
             else if (IR[0] == 'C' && IR[1] == 'R') {
                 cout << "  [CPU] IC=" << setw(2) << setfill('0') << currentIC 
-                          << " | Instruction: CR" << setw(2) << address 
-                          << " (Compare R with M[" << setw(2) << address << "])\n";
+                     << " | Instruction: CR" << setw(2) << address 
+                     << " (Compare R with M[" << setw(2) << address << "])\n";
                 C = 1;
                 for (int i = 0; i < 4; i++) {
                     if (R[i] != M[address][i]) {
@@ -201,8 +180,8 @@ public:
             } 
             else if (IR[0] == 'B' && IR[1] == 'T') {
                 cout << "  [CPU] IC=" << setw(2) << setfill('0') << currentIC 
-                          << " | Instruction: BT" << setw(2) << address 
-                          << " (Branch if C=1)\n";
+                     << " | Instruction: BT" << setw(2) << address 
+                     << " (Branch if C=1)\n";
                 if (C == 1) {
                     IC = address;
                     cout << "         Branching to IC=" << setw(2) << IC << "\n";
@@ -212,7 +191,7 @@ public:
             } 
             else {
                 cout << "  [CPU] IC=" << setw(2) << currentIC 
-                          << " | Unknown instruction: " << IR[0] << IR[1] << IR[2] << IR[3] << "\n";
+                     << " | Unknown instruction: " << IR[0] << IR[1] << IR[2] << IR[3] << "\n";
             }
         }
     }
@@ -220,10 +199,10 @@ public:
     void MOS() {
         int address = (IR[2] - '0') * 10 + (IR[3] - '0');
 
-        if (SI == 1) { // READ (GD)
+        if (SI == 1) {
             cout << "  [MOS] SI=1 (READ) -> Loading data card into M[" 
-                      << setw(2) << setfill('0') << address << ".." 
-                      << setw(2) << address + 9 << "]\n";
+                 << setw(2) << setfill('0') << address << ".." 
+                 << setw(2) << address + 9 << "]\n";
             
             if (getline(fin, buffer)) {
                 if (!buffer.empty() && buffer.back() == '\r') buffer.pop_back();
@@ -243,14 +222,12 @@ public:
                     }
                 }
                 cout << "  [MOS] Data loaded: \"" << buffer << "\"\n";
-            } else {
-                cout << "  [MOS] WARNING: No more data in input.txt for GD\n";
             }
         } 
-        else if (SI == 2) { // WRITE (PD)
+        else if (SI == 2) {
             cout << "  [MOS] SI=2 (WRITE) -> Writing M[" 
-                      << setw(2) << setfill('0') << address << ".." 
-                      << setw(2) << address + 9 << "] to output.txt\n";
+                 << setw(2) << setfill('0') << address << ".." 
+                 << setw(2) << address + 9 << "] to output.txt\n";
             
             for (int i = 0; i < 10; i++) {
                 for (int j = 0; j < 4; j++)
@@ -265,7 +242,7 @@ public:
                     cout << M[address + i][j];
             cout << "\"\n";
         } 
-        else if (SI == 3) { // TERMINATE (H)
+        else if (SI == 3) {
             cout << "  [MOS] SI=3 (TERMINATE) -> Job completed.\n";
             fout << "\n\n";
             fout.flush();
